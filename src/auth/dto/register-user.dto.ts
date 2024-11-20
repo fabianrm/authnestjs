@@ -9,4 +9,10 @@ export class RegisterUserDto {
 
   @MinLength(6)
   password: string;
+
+  @IsString()
+  address?: string;
+  
+  @IsString()
+  phone?: string;
 }

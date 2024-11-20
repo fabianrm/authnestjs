@@ -1,43 +1,31 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
 
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  LoginDto,
-  RegisterUserDto,
-} from './dto/index';
-
 import { User } from './entities/user.entity';
-
-import * as bcryptjs from 'bcryptjs';
-import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './interfaces/jwt-payload';
 import { LoginResponse } from './interfaces/login-response';
+
+import { CreateUserDto, UpdateUserDto, LoginDto, RegisterUserDto } from './dto/index';
+import * as bcryptjs from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name)
     private userModel: Model<User>,
-
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     try {
-      const { password, ...userData } = createUserDto;
+      const { password, ...userData } = createUserDto; //Destructuramos para no retornar el password
 
       // 1. Encriptarla clave
       const newUser = new this.userModel({
-        password: bcryptjs.hashSync(password, 10),
         ...userData,
+        password: bcryptjs.hashSync(password, 10),
       });
       // 2. Guardar el usuario
       return await newUser.save();
@@ -49,6 +37,7 @@ export class AuthService {
     }
   }
 
+  //Retorna usuario creado con Token
   async register(registerDto: RegisterUserDto): Promise<LoginResponse> {
     const user = await this.create(registerDto);
 
@@ -100,6 +89,7 @@ export class AuthService {
     return `This action removes a #${id} auth`;
   }
 
+  //Genera un token
   getJwtToken(payload: JwtPayload) {
     const token = this.jwtService.sign(payload);
     return token;
